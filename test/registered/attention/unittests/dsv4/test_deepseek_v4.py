@@ -415,6 +415,7 @@ class TestDSV4BreakableCudaGraphMetadataContract(CustomTestCase):
             "swa_topk_lengths",
             "c128_page_indices",
             "c128_topk_lengths_clamp1",
+            "c4_sparse_raw_indices",
             "c1_flashmla_metadata",
             "c4_flashmla_metadata",
             "c128_flashmla_metadata",
