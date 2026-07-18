@@ -395,6 +395,19 @@ class TestDSV4BreakableCudaGraphMetadataContract(CustomTestCase):
             DeepseekV4AttnBackend.use_captured_forward_metadata_for_breakable_cuda_graph
         )
 
+    def test_converted_extend_uses_prefill_metadata_mode(self):
+        from sglang.srt.layers.attention.deepseek_v4_backend import (
+            _get_logical_forward_mode,
+        )
+        from sglang.srt.model_executor.forward_batch_info import ForwardMode
+
+        forward_batch = SimpleNamespace(
+            forward_mode=ForwardMode.EXTEND,
+            _original_forward_mode=ForwardMode.DECODE,
+        )
+
+        self.assertEqual(_get_logical_forward_mode(forward_batch), ForwardMode.EXTEND)
+
     def test_refresh_replay_metadata_preserves_captured_tensor_storage(self):
         capture_metadata = self._make_core_metadata(0)
         replay_metadata = self._make_core_metadata(1000)

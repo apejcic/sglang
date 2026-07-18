@@ -94,6 +94,12 @@ def _get_logical_forward_mode(forward_batch: ForwardBatch) -> ForwardMode:
     # from a reused/padded ForwardBatch turn an empty rank into TARGET_VERIFY.
     if forward_batch.forward_mode.is_idle():
         return forward_batch.forward_mode
+    # DP max-len padding can convert decode/idle/verify ranks into EXTEND so
+    # every rank runs the same prefill-shaped body. Plan metadata for the body
+    # that will actually execute; otherwise DSV4 misses prefill-only buffers
+    # such as c4_sparse_raw_indices.
+    if forward_batch.forward_mode.is_extend_without_speculative():
+        return forward_batch.forward_mode
     return (
         getattr(forward_batch, "_original_forward_mode", None)
         or forward_batch.forward_mode
