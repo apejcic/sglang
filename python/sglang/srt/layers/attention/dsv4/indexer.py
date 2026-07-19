@@ -17,6 +17,7 @@ from sglang.srt.configs.deepseek_v4 import DeepSeekV4Config
 from sglang.srt.environ import envs
 from sglang.srt.layers.attention.dsv4.compressor import Compressor
 from sglang.srt.layers.attention.dsv4.metadata import (
+    _LARGE_INDEXER_QUERY_THRESHOLD,
     NonPagedIndexerPlan,
     PagedIndexerMetadata,
 )
@@ -721,16 +722,28 @@ class C4IndexerBackendMixin:
         hisparse_decode = (
             hisparse_coordinator is not None and forward_batch.forward_mode.is_decode()
         )
+        need_sparse_prefill_raw_indices = (
+            forward_batch.forward_mode.is_extend_without_speculative()
+            and (
+                query_rows > _LARGE_INDEXER_QUERY_THRESHOLD
+                or envs.SGLANG_OPT_FLASHMLA_SPARSE_PREFILL.get()
+            )
+        )
 
         raw_indices = None
         if capture_enabled:
             raw_indices = torch.empty_like(c4_sparse_page_indices)
+            if need_sparse_prefill_raw_indices:
+                core_metadata.c4_sparse_raw_indices = raw_indices
         elif hisparse_decode:
             raw_indices = hisparse_coordinator.raw_indices_buffer[
                 : c4_sparse_page_indices.size(0)
             ]
         elif core_metadata.c4_sparse_raw_indices is not None:
             raw_indices = core_metadata.c4_sparse_raw_indices
+        elif need_sparse_prefill_raw_indices:
+            raw_indices = torch.empty_like(c4_sparse_page_indices)
+            core_metadata.c4_sparse_raw_indices = raw_indices
 
         if envs.SGLANG_TOPK_TRANSFORM_512_TORCH.get():
             topk_transform_512_pytorch_vectorized(
