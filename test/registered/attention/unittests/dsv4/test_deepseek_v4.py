@@ -454,6 +454,34 @@ class TestDSV4BreakableCudaGraphMetadataContract(CustomTestCase):
             )
         )
 
+    def test_refresh_replay_metadata_preserves_raw_buffer_when_replay_omits_it(self):
+        capture_metadata = self._make_core_metadata(0)
+        replay_metadata = self._make_core_metadata(1000)
+        replay_metadata.c4_sparse_raw_indices = None
+        captured_raw_indices = capture_metadata.c4_sparse_raw_indices
+
+        capture_metadata.refresh_for_breakable_cuda_graph_replay_(replay_metadata)
+
+        self.assertIs(capture_metadata.c4_sparse_raw_indices, captured_raw_indices)
+
+    def test_refresh_replay_metadata_allocates_raw_buffer_when_missing(self):
+        capture_metadata = self._make_core_metadata(0)
+        replay_metadata = self._make_core_metadata(1000)
+        capture_metadata.c4_sparse_raw_indices = None
+        replay_metadata.c4_sparse_raw_indices = None
+
+        capture_metadata.refresh_for_breakable_cuda_graph_replay_(replay_metadata)
+
+        self.assertIsNotNone(capture_metadata.c4_sparse_raw_indices)
+        self.assertEqual(
+            capture_metadata.c4_sparse_raw_indices.shape,
+            capture_metadata.c4_sparse_page_indices.shape,
+        )
+        self.assertEqual(
+            capture_metadata.c4_sparse_raw_indices.dtype,
+            capture_metadata.c4_sparse_page_indices.dtype,
+        )
+
     def test_backend_replay_keeps_captured_metadata_active(self):
         from sglang.srt.layers.attention.deepseek_v4_backend import (
             DeepseekV4AttnBackend,

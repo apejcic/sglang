@@ -253,7 +253,6 @@ class DSV4AttnMetadata:
             "swa_topk_lengths",
             "c128_page_indices",
             "c128_topk_lengths_clamp1",
-            "c4_sparse_raw_indices",
             "c1_flashmla_metadata",
             "c4_flashmla_metadata",
             "c128_flashmla_metadata",
@@ -273,6 +272,15 @@ class DSV4AttnMetadata:
         # captured graph before the attention graph break consumes it.
         for field_name in reference_assign_fields:
             setattr(self, field_name, getattr(other, field_name))
+
+        if other.c4_sparse_raw_indices is not None:
+            self.c4_sparse_raw_indices = other.c4_sparse_raw_indices
+        elif self.c4_sparse_raw_indices is None:
+            page_indices = self.c4_sparse_page_indices
+            if page_indices is None:
+                page_indices = other.c4_sparse_page_indices
+            if page_indices is not None:
+                self.c4_sparse_raw_indices = torch.empty_like(page_indices)
 
     def init_compression_metadata(self):
         assert self.page_table.dim() == 2
