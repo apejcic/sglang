@@ -118,6 +118,10 @@ class SchedulerStats:
     num_retracted_reqs: int = 0
     num_paused_reqs: int = 0
 
+    # Concurrent chunked prefill (unified path)
+    num_chunked_prefill_reqs: int = 0
+    max_concurrent_chunked_reqs: int = 1
+
     # PD disaggregation
     num_prefill_bootstrap_queue_reqs: QueueCount = field(default_factory=QueueCount)
     num_prefill_inflight_queue_reqs: QueueCount = field(default_factory=QueueCount)
@@ -477,6 +481,41 @@ class SchedulerMetricsCollector(_StatLoggerDIMixin):
         self.num_paused_reqs = Gauge(
             name="sglang:num_paused_reqs",
             documentation="The number of paused requests by async weight sync.",
+            labelnames=labels.keys(),
+        )
+
+        # =================================================================
+        # Concurrent chunked prefill (unified path)
+        # =================================================================
+        # Unlike the PD-disaggregation gauges below, these are emitted on every
+        # engine mode: the mid-prefill set they describe lives in the unified
+        # scheduler, so a non-disaggregated engine would otherwise have no
+        # visibility into concurrent chunked prefill at all.
+        self.num_chunked_prefill_reqs = Gauge(
+            name="sglang:num_chunked_prefill_reqs",
+            documentation=(
+                "The number of requests currently mid-prefill (chunked prefill "
+                "in flight). Bounded by max_concurrent_chunked_reqs."
+            ),
+            labelnames=labels.keys(),
+            multiprocess_mode="mostrecent",
+        )
+        self.max_concurrent_chunked_reqs = Gauge(
+            name="sglang:max_concurrent_chunked_reqs",
+            documentation=(
+                "The configured cap on concurrent mid-prefill requests "
+                "(chunked_prefill_size // long_prefill_token_threshold). 1 when "
+                "concurrent chunked prefill is disabled."
+            ),
+            labelnames=labels.keys(),
+            multiprocess_mode="mostrecent",
+        )
+        self.chunked_prefill_capacity_skipped_total = Counter(
+            name="sglang:chunked_prefill_capacity_skipped_total",
+            documentation=(
+                "Total number of times a request was refused admission because "
+                "the concurrent mid-prefill capacity was full (AddReqResult.SKIP)."
+            ),
             labelnames=labels.keys(),
         )
 
@@ -1148,6 +1187,9 @@ class SchedulerMetricsCollector(_StatLoggerDIMixin):
     def increment_bootstrap_failed_reqs(self) -> None:
         self.num_bootstrap_failed_reqs.labels(**self.labels).inc(1)
 
+    def increment_chunked_prefill_capacity_skipped(self) -> None:
+        self.chunked_prefill_capacity_skipped_total.labels(**self.labels).inc(1)
+
     def increment_transfer_failed_reqs(self) -> None:
         self.num_transfer_failed_reqs.labels(**self.labels).inc(1)
 
@@ -1353,6 +1395,12 @@ class SchedulerMetricsCollector(_StatLoggerDIMixin):
         # Retract
         self._log_gauge(self.num_retracted_reqs, stats.num_retracted_reqs)
         self._log_gauge(self.num_paused_reqs, stats.num_paused_reqs)
+
+        # Concurrent chunked prefill (unified path)
+        self._log_gauge(self.num_chunked_prefill_reqs, stats.num_chunked_prefill_reqs)
+        self._log_gauge(
+            self.max_concurrent_chunked_reqs, stats.max_concurrent_chunked_reqs
+        )
 
         # PD disaggregation
         self._log_gauge_queue_count(
