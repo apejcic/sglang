@@ -49,7 +49,7 @@ class TestSchedulerRecordWeightVersionChange(CustomTestCase):
         return SimpleNamespace(
             collect_inflight_reqs=lambda: set(inflight),
             waiting_queue=list(waiting),
-            chunked_req=chunked,
+            chunked_reqs=[] if chunked is None else [chunked],
             hisparse_coordinator=(
                 SimpleNamespace(
                     ack_staging_queue=[SimpleNamespace(req=req) for req in staging]

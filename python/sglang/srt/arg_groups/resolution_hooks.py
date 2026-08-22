@@ -21,6 +21,7 @@ _OVERRIDABLE_HOOKS: FrozenSet[str] = frozenset(
         "handle_offload_compatibility",
         "validate_prefill_decode_interval",
         "default_unset_prefill_decode_interval",
+        "validate_long_prefill_token_threshold",
         "validate_response_store",
         "validate_sampling_mask_max_tokens",
         "validate_prefill_cp_platform",

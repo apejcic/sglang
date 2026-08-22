@@ -144,7 +144,7 @@ class TestShardedFullPoolInvariant(CustomTestCase):
             )
         self.last_batch = SimpleNamespace(reqs=[], is_empty=lambda: True)
         self.running_batch = self.last_batch
-        self.chunked_req = None
+        self.chunked_reqs = []
         observer = SchedulerPoolStatsObserver(
             tree_cache=self.cache,
             token_to_kv_pool_allocator=self.allocator,
@@ -172,7 +172,7 @@ class TestShardedFullPoolInvariant(CustomTestCase):
             pool_stats_observer=observer,
             get_last_batch=lambda: self.last_batch,
             get_running_batch=lambda: self.running_batch,
-            get_chunked_req=lambda: self.chunked_req,
+            get_chunked_reqs=lambda: self.chunked_reqs,
             scheduler_stage_metrics=None,
         )
 
@@ -274,7 +274,7 @@ class TestShardedFullPoolInvariant(CustomTestCase):
         # between prefill chunks instead of appearing in either batch.
         for parked in (False, True):
             with self.subTest(parked=parked):
-                self.chunked_req = req
+                self.chunked_reqs = [req]
                 if parked:
                     self.last_batch = SimpleNamespace(reqs=[], is_empty=lambda: True)
                     self.running_batch = self.last_batch
@@ -295,7 +295,7 @@ class TestShardedFullPoolInvariant(CustomTestCase):
         self.cache.session.slots["s"] = SessionSlot(kv=req.kv)
         for parked in (False, True):
             with self.subTest(parked=parked):
-                self.chunked_req = req
+                self.chunked_reqs = [req]
                 if parked:
                     self.last_batch = SimpleNamespace(reqs=[], is_empty=lambda: True)
                     self.running_batch = self.last_batch

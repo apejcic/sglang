@@ -205,7 +205,7 @@ class _FakeScheduler(SchedulerDisaggregationDecodeMixin):
         self.metrics_collector = Mock()
         self.streamed_aborts = []
         self.ngram_embedding_manager = Mock()
-        self.chunked_req = None
+        self.chunked_reqs = []
         self.future_map = None
 
     def stream_output(self, reqs, return_logprob):

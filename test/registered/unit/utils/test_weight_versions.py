@@ -314,7 +314,7 @@ class _SchedulerStub:
         self.running_batch = SimpleNamespace(reqs=running)
         self.last_batch = last_batch
         self.waiting_queue = waiting
-        self.chunked_req = chunked
+        self.chunked_reqs = [] if chunked is None else [chunked]
         self.hisparse_coordinator = hisparse
 
 

@@ -405,7 +405,7 @@ class TestOptimisticPrefillCacheOwnership(unittest.TestCase):
 
     def test_scheduler_waiting_abort_delegates_release_once(self):
         scheduler = Scheduler.__new__(Scheduler)
-        scheduler.chunked_req = None
+        scheduler.chunked_reqs = []
         scheduler.mm_receiver = None
         scheduler.waiting_queue = [MagicMock(rid="req")]
         scheduler.beam_coordinator = MagicMock()
@@ -892,7 +892,7 @@ class TestDecodePrebuilt(unittest.TestCase):
         scheduler.schedule_stream = MagicMock()
         scheduler.forward_stream = MagicMock()
         scheduler.ngram_embedding_manager = MagicMock()
-        scheduler.chunked_req = None
+        scheduler.chunked_reqs = []
         return scheduler
 
     def test_waiting_queue_is_sorted_before_prebuilt_selection(self):

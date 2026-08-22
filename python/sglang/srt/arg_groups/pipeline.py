@@ -243,6 +243,11 @@ def run_resolution_pipeline(server_args: Any) -> None:
     run_hook(handle_kv4_compatibility, server_args)
     run_hook(handle_mxfp8_kv_cache_compatibility, server_args)
     run_post_process_pass(server_args, _page_size_default)
+    from sglang.srt.arg_groups.validation_hook import (
+        validate_long_prefill_token_threshold,
+    )
+
+    run_hook(validate_long_prefill_token_threshold, server_args)
     run_hook(handle_amd_specifics, server_args)
     run_hook(handle_nccl_pre_warm, server_args)
     run_hook(handle_grammar_backend, server_args)

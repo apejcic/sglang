@@ -34,12 +34,12 @@ class _FakeReq:
         return self._finished
 
 
-def _make_scheduler(pending_req, *, chunked_req, running_reqs) -> Scheduler:
+def _make_scheduler(pending_req, *, chunked_reqs, running_reqs) -> Scheduler:
     sched = Scheduler.__new__(Scheduler)
     sched.enable_continuous_input_polling = False
     sched.result_queue = deque()
-    sched.chunked_req = chunked_req
-    sched._pending_chunked_abort_req = pending_req
+    sched.chunked_reqs = list(chunked_reqs)
+    sched._pending_chunked_abort_reqs = [pending_req]
     sched.waiting_queue = []
     sched.dllm_config = None
     sched.grammar_manager = Mock()
@@ -57,22 +57,22 @@ class TestPendingChunkedAbortRace(CustomTestCase):
 
     def test_req_left_chunked_slot_is_aborted(self):
         req = _FakeReq("zombie_rid")
-        sched = _make_scheduler(req, chunked_req=None, running_reqs=[req])
+        sched = _make_scheduler(req, chunked_reqs=[], running_reqs=[req])
 
         sched.process_pending_chunked_abort()
 
         self.assertIsNotNone(req.to_finish, "recorded abort was never applied")
-        self.assertIsNone(sched._pending_chunked_abort_req)
+        self.assertEqual(sched._pending_chunked_abort_reqs, [])
 
     def test_finished_req_only_clears_marker(self):
         req = _FakeReq("done_rid")
         req._finished = True
-        sched = _make_scheduler(req, chunked_req=None, running_reqs=[])
+        sched = _make_scheduler(req, chunked_reqs=[], running_reqs=[])
 
         sched.process_pending_chunked_abort()
 
         self.assertIsNone(req.to_finish)
-        self.assertIsNone(sched._pending_chunked_abort_req)
+        self.assertEqual(sched._pending_chunked_abort_reqs, [])
 
 
 if __name__ == "__main__":

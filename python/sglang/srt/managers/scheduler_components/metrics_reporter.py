@@ -844,6 +844,12 @@ class SchedulerMetricsReporter:
             # decode-stats ticks, and the gauge must decay rather than hold.
             self.stats.gen_throughput = self._current_gen_throughput(now)
 
+            # Concurrent chunked prefill: mid-prefill depth + configured cap.
+            self.stats.num_chunked_prefill_reqs = len(self.scheduler.chunked_reqs)
+            self.stats.max_concurrent_chunked_reqs = (
+                self.scheduler.max_concurrent_chunked_reqs
+            )
+
             # Memory pool usage ratios / Absolute token counts
             pool_stats.update_scheduler_stats(self.stats)
 

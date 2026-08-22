@@ -2928,7 +2928,7 @@ class SchedulerDisaggregationDecodeMixin:
             self.running_batch = plan.running_batch
             batch = plan.batch_to_run
             batch = self.ngram_embedding_manager.prepare_for_forward(
-                batch, chunked_req=self.chunked_req
+                batch, chunked_reqs=self.chunked_reqs
             )
             self.cur_batch_for_debug = batch
 
@@ -2975,7 +2975,7 @@ class SchedulerDisaggregationDecodeMixin:
             self.running_batch = plan.running_batch
             batch = plan.batch_to_run
             batch = self.ngram_embedding_manager.prepare_for_forward(
-                batch, chunked_req=self.chunked_req
+                batch, chunked_reqs=self.chunked_reqs
             )
             self.cur_batch_for_debug = batch
             # overlap + spec + grammar is unsupported (would desync DP ranks).
@@ -3028,7 +3028,7 @@ class SchedulerDisaggregationDecodeMixin:
         # Process pending prebuilt batch: output processing + filter + merge
         new_prebuilt_batch = self.get_new_prebuilt_batch(running_batch)
         if new_prebuilt_batch:
-            assert self.chunked_req is None
+            assert not self.chunked_reqs
             self.batch_result_processor.process_batch_result_prebuilt(
                 new_prebuilt_batch
             )
@@ -3064,7 +3064,7 @@ class SchedulerDisaggregationDecodeMixin:
         if batch.is_empty():
             return None
         self.ngram_embedding_manager.prepare_for_forward(
-            batch, chunked_req=self.chunked_req
+            batch, chunked_reqs=self.chunked_reqs
         )
         batch.process_prebuilt(self.future_map)
         return batch

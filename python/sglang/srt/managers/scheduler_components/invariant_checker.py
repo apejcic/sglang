@@ -68,7 +68,7 @@ class SchedulerInvariantChecker:
     scheduler_stage_metrics: SchedulerStageMetricsRecorder
     # The chunked-prefill request parked between chunks is in neither batch;
     # it still owns its KV row.
-    get_chunked_req: Callable = field(default=lambda: None)
+    get_chunked_reqs: Callable = field(default=lambda: ())
     count_req_pool_leak_warnings: int = 0
     count_memory_leak_warnings: int = 0
     recent_busy_msgs: Deque[str] = field(
@@ -279,9 +279,7 @@ class SchedulerInvariantChecker:
         # ScheduleBatch's dataclass __eq__ compares tensors and raises.
         if running_batch is not None and running_batch is not last_batch:
             reqs += running_batch.reqs
-        chunked_req = self.get_chunked_req()
-        if chunked_req is not None:
-            reqs.append(chunked_req)
+        reqs.extend(self.get_chunked_reqs())
 
         # A request running on a session's record does not own that row.
         session_kvs = {id(kv) for kv in self.tree_cache.session_records().values()}

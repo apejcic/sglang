@@ -157,11 +157,22 @@ class PrefillBudget:
         extra_tokens: int = 0,
         chunk_limit: int | None = None,
         is_chunked_continuation: bool = False,
+        extra_total_tokens: int = 0,
     ) -> None:
+        """Charge one admission.
+
+        ``extra_total_tokens`` is charged to the lifetime (total) offset only,
+        never to the current pass: concurrent chunked prefill uses it to hold a
+        mid-prefill request's whole remaining prefill + decode headroom.
+        """
         extend_input_len = self.ceil_paged_tokens(extend_input_len)
         immediate = extend_input_len + self.page_size + extra_tokens
-        self.total_offset += immediate + max_new_tokens
+        self.total_offset += immediate + max_new_tokens + extra_total_tokens
         self.current_offset += immediate
+
+    def reserve_total(self, tokens: int) -> None:
+        """Charge the lifetime offset only (a parked mid-prefill request)."""
+        self.total_offset += tokens
 
 
 class SWAPrefillBudget(PrefillBudget):
@@ -301,8 +312,14 @@ class SWAPrefillBudget(PrefillBudget):
         extra_tokens: int = 0,
         chunk_limit: int | None = None,
         is_chunked_continuation: bool = False,
+        extra_total_tokens: int = 0,
     ) -> None:
-        super().reserve(extend_input_len, max_new_tokens, extra_tokens=extra_tokens)
+        super().reserve(
+            extend_input_len,
+            max_new_tokens,
+            extra_tokens=extra_tokens,
+            extra_total_tokens=extra_total_tokens,
+        )
         # A continuation already owns its ring slot.
         if not (self.req_ring and is_chunked_continuation):
             self.swa_offset += self.swa_tokens(

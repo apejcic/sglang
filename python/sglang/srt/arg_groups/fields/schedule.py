@@ -60,6 +60,10 @@ class Schedule(msgspec.Struct):
             resolvable=True,
         ),
     ] = None
+    long_prefill_token_threshold: A[
+        int,
+        "For chunked prefill, the maximum number of prompt tokens a single request may prefill in one scheduled pass. Requests with a longer remaining prompt are prefilled in chunks of at most this size, so up to chunked_prefill_size // threshold requests can be mid-prefill concurrently instead of one long prompt monopolizing the prefill budget. 0 (default) disables the cap: a single request may consume the whole chunked_prefill_size budget. Mirrors vLLM's --long-prefill-token-threshold.",
+    ] = 0
     enable_dynamic_chunking: A[
         bool,
         "Enable dynamic chunk size adjustment for pipeline parallelism. When enabled, chunk sizes are dynamically calculated based on fitted function to maintain consistent execution time across chunks.",

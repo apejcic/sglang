@@ -467,6 +467,12 @@ Please consult the documentation below and [server_args.py](https://github.com/s
       <td style={{padding: "9px 12px", backgroundColor: "rgba(255,255,255,0.05)"}}>Type: int</td>
     </tr>
         <tr>
+      <td style={{padding: "9px 12px", fontWeight: 500, backgroundColor: "rgba(255,255,255,0.02)"}}>`--long-prefill-token-threshold`</td>
+      <td style={{padding: "9px 12px", backgroundColor: "rgba(255,255,255,0.05)"}}>For chunked prefill, the maximum number of prompt tokens a single request may prefill in one scheduled pass. Requests with a longer remaining prompt are prefilled in chunks of at most this size, so up to chunked_prefill_size // threshold requests can be mid-prefill concurrently instead of one long prompt monopolizing the prefill budget. 0 (default) disables the cap: a single request may consume the whole chunked_prefill_size budget. Mirrors vLLM's --long-prefill-token-threshold.</td>
+      <td style={{padding: "9px 12px", backgroundColor: "rgba(255,255,255,0.02)"}}>`0`</td>
+      <td style={{padding: "9px 12px", backgroundColor: "rgba(255,255,255,0.05)"}}>Type: int</td>
+    </tr>
+        <tr>
       <td style={{padding: "9px 12px", fontWeight: 500, backgroundColor: "rgba(255,255,255,0.02)"}}>`--prefill-max-requests`</td>
       <td style={{padding: "9px 12px", backgroundColor: "rgba(255,255,255,0.05)"}}>The maximum number of requests in a prefill batch. If not specified, there is no limit.</td>
       <td style={{padding: "9px 12px", backgroundColor: "rgba(255,255,255,0.02)"}}>`None`</td>

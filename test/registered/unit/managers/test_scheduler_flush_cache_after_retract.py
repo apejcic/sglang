@@ -36,7 +36,7 @@ class TestSchedulerFlushCacheAfterRetract(unittest.TestCase):
         scheduler.enable_overlap = False
         scheduler.last_batch = None
         scheduler.cur_batch = None
-        scheduler.chunked_req = None
+        scheduler.chunked_reqs = []
         scheduler.disaggregation_mode = DisaggregationMode.NULL
         scheduler.running_batch = MagicMock()
         scheduler.running_batch.is_empty.return_value = True

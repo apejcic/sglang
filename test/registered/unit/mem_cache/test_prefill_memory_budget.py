@@ -221,7 +221,7 @@ class TestSharedPrefillAdmission(unittest.TestCase):
                 self.assertTrue(allocator.can_reserve(2 * page_size + 2, 2 * page_size))
 
                 adder.add_one_req(
-                    req, has_chunked_req=False, truncation_align_size=None
+                    req, num_chunked_reqs=0, truncation_align_size=None
                 )
                 self.assertEqual(adder.can_run_list, [req])
 

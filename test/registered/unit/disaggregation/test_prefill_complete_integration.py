@@ -531,7 +531,7 @@ class TestAllocationIntegration(CustomTestCase):
                     try:
                         req = Mock(finished_reason=None, to_finish=None)
                         scheduler = SimpleNamespace(
-                            chunked_req=req,
+                            chunked_reqs=[req],
                             tree_cache=Mock(),
                             enable_overlap=overlap,
                             check_bootstrap=Mock(return_value=False),
@@ -550,11 +550,11 @@ class TestAllocationIntegration(CustomTestCase):
                                 scheduler, None, running
                             )
                         if policy == "prefill_complete":
-                            self.assertIs(scheduler.chunked_req, req)
+                            self.assertEqual(scheduler.chunked_reqs, [req])
                             self.assertFalse(running.batch_is_full)
                             scheduler.optimistic_release_and_requeue.assert_not_called()
                         else:
-                            self.assertIsNone(scheduler.chunked_req)
+                            self.assertEqual(scheduler.chunked_reqs, [])
                             self.assertEqual(
                                 scheduler.optimistic_release_and_requeue.call_count,
                                 0 if overlap else 1,

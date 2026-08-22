@@ -264,8 +264,7 @@ class SchedulerInternalStateController:
             *scheduler.waiting_queue,
             *scheduler.grammar_manager.grammar_queue,
         ]
-        if scheduler.chunked_req is not None:
-            queued.append(scheduler.chunked_req)
+        queued.extend(scheduler.chunked_reqs)
         if scheduler.disaggregation_mode == DisaggregationMode.DECODE:
             prealloc_queue = scheduler.disagg_decode_prealloc_queue
             queued.extend(

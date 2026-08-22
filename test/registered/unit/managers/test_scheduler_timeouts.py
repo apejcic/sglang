@@ -169,7 +169,7 @@ class TestRunningTimeout(CustomTestCase):
         s.enable_continuous_input_polling = True
         s.result_queue = deque([(_batch([stale]), None), (s.last_batch, None)])
         s.disaggregation_mode = DisaggregationMode.PREFILL
-        s.chunked_req = None
+        s.chunked_reqs = []
         s.mm_receiver = None
         s.dllm_config = None
         s.grammar_manager = MagicMock()

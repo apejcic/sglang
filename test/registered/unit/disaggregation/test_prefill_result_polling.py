@@ -160,7 +160,7 @@ class _Scheduler(SchedulerDisaggregationPrefillMixin):
         self.attn_tp_cpu_group = None
         self.last_batch = None
         self.result_queue = deque()
-        self.chunked_req = None
+        self.chunked_reqs = []
         self.decode_offload_manager = None
         self.running_batch = ScheduleBatch(reqs=[])
         self.waiting_queue = []
@@ -173,7 +173,7 @@ class _Scheduler(SchedulerDisaggregationPrefillMixin):
             pop_bootstrapped=lambda: []
         )
         self.ngram_embedding_manager = SimpleNamespace(
-            prepare_for_forward=lambda batch, chunked_req: batch
+            prepare_for_forward=lambda batch, chunked_reqs: batch
         )
         self.forward_stream_ctx = nullcontext()
         self.copy_stream_ctx = nullcontext()
@@ -564,7 +564,7 @@ class TestPrefillResultPolling(CustomTestCase):
                     "fcfs", scheduler.tree_cache, False, False, False
                 )
                 scheduler.ngram_embedding_manager.prepare_for_forward = Mock(
-                    side_effect=lambda batch, chunked_req: batch
+                    side_effect=lambda batch, chunked_reqs: batch
                 )
                 head, paced = (_batch(i).reqs[0] for i in (90, 91))
                 for req in (head, paced):
@@ -1257,9 +1257,9 @@ class TestPrefillResultPolling(CustomTestCase):
                     def run_batch(self, batch):
                         end = int(batch.forward_iter)
                         req.extend_end = end
-                        self.chunked_req = req if end < 12 else None
-                        batch.chunked_req = self.chunked_req
-                        if self.chunked_req is not None:
+                        self.chunked_reqs = [req] if end < 12 else []
+                        batch.chunked_reqs = tuple(self.chunked_reqs)
+                        if self.chunked_reqs:
                             req.inflight_middle_chunks += 1
                         return super().run_batch(batch)
 
@@ -1336,7 +1336,8 @@ class TestPrefillResultPolling(CustomTestCase):
                     def run_batch(self, batch):
                         if req in batch.reqs:
                             req.extend_end = batch.forward_iter
-                            self.chunked_req = batch.chunked_req = req
+                            self.chunked_reqs = [req]
+                            batch.chunked_reqs = (req,)
                             req.inflight_middle_chunks += 1
                         return super().run_batch(batch)
 
@@ -1391,7 +1392,7 @@ class TestPrefillResultPolling(CustomTestCase):
                 self.assertEqual(req.prefill_attempt_count, 1)
                 self.assertEqual(req.inflight_middle_chunks, 0)
                 self.assertEqual(list(req.output_ids), [])
-                self.assertIsNone(scheduler.chunked_req)
+                self.assertEqual(scheduler.chunked_reqs, [])
                 self.assertEqual(
                     scheduler.result_processes,
                     {b.forward_iter: 1 for b in [*chunks, other]},

@@ -74,7 +74,7 @@ class _Scheduler(SchedulerDisaggregationPrefillMixin):
         self.maybe_send_health_check_signal = Mock()
         self.req_to_metadata_buffer_idx_allocator = Mock()
         self.enable_hicache_storage = True
-        self.chunked_req = None
+        self.chunked_reqs = []
 
 
 def _batch(req):
