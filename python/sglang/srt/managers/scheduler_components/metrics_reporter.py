@@ -679,6 +679,12 @@ class SchedulerMetricsReporter:
             self.stats.num_grammar_queue_reqs = len(self.scheduler.grammar_manager)
             self.stats.cache_hit_rate = cache_hit_rate
 
+            # Concurrent chunked prefill: mid-prefill depth + configured cap.
+            self.stats.num_chunked_prefill_reqs = len(self.scheduler.chunked_reqs)
+            self.stats.max_concurrent_chunked_reqs = (
+                self.scheduler.max_concurrent_chunked_reqs
+            )
+
             # Memory pool usage ratios / Absolute token counts
             pool_stats.update_scheduler_stats(self.stats)
 
