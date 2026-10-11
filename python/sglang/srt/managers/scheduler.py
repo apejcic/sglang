@@ -1410,7 +1410,7 @@ class Scheduler(
             threshold <= 0
             or self.chunked_prefill_size is None
             or self.disaggregation_mode == DisaggregationMode.PREFILL
-            or self.ps.pp_size > 1
+            or get_parallel().pp_size > 1
             or self.dllm_config is not None
         ):
             return
